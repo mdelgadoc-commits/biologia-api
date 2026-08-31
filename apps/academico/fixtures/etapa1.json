@@ -1,0 +1,8 @@
+[
+  {"model": "academico.etapa", "pk": 1, "fields": {"titulo": "Etapa 1: Biología como Ciencia", "orden": 1}},
+  {"model": "academico.tema", "pk": 1, "fields": {"etapa": 1, "titulo": "Concepto", "orden": 1, "tema_previo": null, "icono": "📖"}},
+  {"model": "academico.tema", "pk": 2, "fields": {"etapa": 1, "titulo": "Áreas", "orden": 2, "tema_previo": 1, "icono": "🌱"}},
+  {"model": "academico.tema", "pk": 3, "fields": {"etapa": 1, "titulo": "Objeto", "orden": 3, "tema_previo": 2, "icono": "🧬"}},
+  {"model": "academico.tema", "pk": 4, "fields": {"etapa": 1, "titulo": "Autores", "orden": 4, "tema_previo": 3, "icono": "📜"}},
+  {"model": "academico.tema", "pk": 5, "fields": {"etapa": 1, "titulo": "Síntesis", "orden": 5, "tema_previo": 4, "icono": "🧑‍🔬"}}
+]
