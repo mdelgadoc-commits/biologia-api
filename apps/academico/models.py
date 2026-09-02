@@ -41,3 +41,18 @@ class ProgresoTema(models.Model):
 
     def __str__(self):
         return f"{self.estudiante} - {self.tema} ({'✓' if self.completado else '…'})"
+
+
+class Seccion(models.Model):
+    """Grupo/clase de un docente, ej. '3ro A Biología'."""
+    nombre = models.CharField(max_length=100)
+    docente = models.ForeignKey(
+        "users.Usuario", on_delete=models.CASCADE, related_name="secciones",
+        limit_choices_to={"rol": "docente"}
+    )
+    estudiantes = models.ManyToManyField(
+        "users.PerfilEstudiante", related_name="secciones", blank=True
+    )
+
+    def __str__(self):
+        return self.nombre

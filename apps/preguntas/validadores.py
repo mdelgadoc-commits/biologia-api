@@ -13,21 +13,21 @@ class ValidadorRespuesta(ABC):
 class ValidadorContextualOInferencial(ValidadorRespuesta):
     def validar(self, payload):
         return self.pregunta.elementos.filter(
-            id=payload["alternativa_id"], rol="alternativa", es_correcto=True
+            id=payload.get("alternativa_id"), rol="alternativa", es_correcto=True
         ).exists()
 
 
 class ValidadorVFPremisas(ValidadorRespuesta):
     def validar(self, payload):
         return self.pregunta.elementos.filter(
-            id=payload["alternativa_id"], rol="alternativa", es_correcto=True
+            id=payload.get("alternativa_id"), rol="alternativa", es_correcto=True
         ).exists()
 
 
 class ValidadorCuantasCorrectas(ValidadorRespuesta):
     def validar(self, payload):
         return self.pregunta.elementos.filter(
-            id=payload["alternativa_id"], rol="alternativa", es_correcto=True
+            id=payload.get("alternativa_id"), rol="alternativa", es_correcto=True
         ).exists()
 
 

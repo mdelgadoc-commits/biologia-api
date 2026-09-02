@@ -3,11 +3,10 @@ import random
 from .repositories import PreguntaRepository
 
 DISTRIBUCION_DEFECTO = {
-    "contextual": 8,
-    "vf_premisas": 4,
-    "cuantas_correctas": 4,
-    "inferencial": 4,
-    "completar": 10,
+    "contextual": 2,
+    "vf_premisas": 1,
+    "cuantas_correctas": 1,
+    "completar": 1,
 }
 
 
