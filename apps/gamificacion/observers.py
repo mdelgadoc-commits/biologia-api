@@ -25,3 +25,11 @@ def calcular_monedas_recompensa(estrellas: int, racha_errores_maxima: int) -> in
     penalizacion = min(monedas, racha_errores_maxima * PENALIZACION_POR_RACHA)
     return max(0, monedas - penalizacion)
 
+
+# --- Invalidation de caché al completar intentos ---
+from .cache_reportes import invalidar_cache_seccion
+
+@receiver(tema_completado)
+def invalidar_cache_dashboard(sender, estudiante, tema, intento, estrellas, **kwargs):
+    for seccion in estudiante.secciones.all():
+        invalidar_cache_seccion(seccion.id)
