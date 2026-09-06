@@ -151,3 +151,48 @@ class ReporteSeccionService:
             "mejora_precision_pct": mejora_precision,
             "mejora_velocidad_ms": mejora_velocidad_ms,
         }
+
+
+class PuntosDebilesService:
+    """Unifica 'puntos débiles de un salón' y 'puntos débiles de un alumno'
+    bajo la misma lógica: agrupar por concepto (pregunta) y ordenar por
+    tasa de error descendente."""
+
+    def __init__(self, seccion, tema_id=None, estudiante_id=None):
+        self.seccion = seccion
+        self.tema_id = tema_id
+        self.estudiante_id = estudiante_id
+
+    def calcular(self, limite=10):
+        respuestas = RespuestaEstudiante.objects.filter(
+            intento__estudiante__in=self.seccion.estudiantes.all()
+        ).select_related("pregunta", "pregunta__tema", "intento__estudiante")
+
+        if self.tema_id:
+            respuestas = respuestas.filter(pregunta__tema_id=self.tema_id)
+        if self.estudiante_id:
+            respuestas = respuestas.filter(intento__estudiante_id=self.estudiante_id)
+
+        agregados = (
+            respuestas.values("pregunta__id", "pregunta__enunciado", "pregunta__tema__titulo")
+            .annotate(
+                total=Count("id"),
+                errores=Count("id", filter=Q(es_correcta=False)),
+                alumnos_afectados=Count("intento__estudiante", filter=Q(es_correcta=False), distinct=True),
+            )
+        )
+
+        resultado = []
+        for a in agregados:
+            if a["total"] == 0:
+                continue
+            resultado.append({
+                "concepto": a["pregunta__enunciado"],
+                "tema": a["pregunta__tema__titulo"],
+                "tasa_error": round(a["errores"] / a["total"] * 100),
+                "intentos": a["total"],
+                "alumnos_afectados": a["alumnos_afectados"],
+            })
+
+        resultado.sort(key=lambda x: x["tasa_error"], reverse=True)
+        return resultado[:limite]

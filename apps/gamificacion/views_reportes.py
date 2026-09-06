@@ -53,3 +53,19 @@ class EvolucionIndividualView(APIView):
     def get(self, request, estudiante_id):
         servicio = _service_desde_request(request)
         return Response(servicio.evolucion_individual(estudiante_id))
+
+
+from .reportes import PuntosDebilesService
+
+
+class PuntosDebilesView(APIView):
+    permission_classes = [IsAuthenticated, EsDocente]
+
+    def get(self, request):
+        seccion_id = request.query_params.get("seccion")
+        seccion = get_object_or_404(Seccion, id=seccion_id, docente=request.user)
+        tema_id = request.query_params.get("tema")
+        estudiante_id = request.query_params.get("estudiante")
+
+        servicio = PuntosDebilesService(seccion, tema_id=tema_id, estudiante_id=estudiante_id)
+        return Response(servicio.calcular())

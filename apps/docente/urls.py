@@ -5,3 +5,7 @@ urlpatterns = [
     path('', include('apps.preguntas.urls_docente')),
     path('', include('apps.gamificacion.urls_docente')),
 ]
+
+urlpatterns += [
+    path('', include('apps.academico.urls_secciones')),
+]
