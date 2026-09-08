@@ -1,35 +1,28 @@
 from rest_framework import serializers
-from .models import Etapa, Tema, ProgresoTema
+from .utils import determinar_icono_estado
 
 
-class TemaEstudianteSerializer(serializers.ModelSerializer):
-    desbloqueado = serializers.SerializerMethodField()
-    completado = serializers.SerializerMethodField()
+class TemaEstudianteSerializer(serializers.Serializer):
+    """Traduce el dict que arma obtener_mapa_etapa() (stateful) en JSON,
+    calculando el ícono con una función stateless (determinar_icono_estado)."""
 
-    class Meta:
-        model = Tema
-        fields = ["id", "titulo", "orden", "icono", "desbloqueado", "completado"]
+    id = serializers.SerializerMethodField()
+    titulo = serializers.SerializerMethodField()
+    orden = serializers.SerializerMethodField()
+    desbloqueado = serializers.BooleanField()
+    completado = serializers.BooleanField()
+    estrellas = serializers.IntegerField()
+    icono_estado = serializers.SerializerMethodField()
 
-    def get_progreso(self, obj):
-        estudiante = self.context["estudiante"]
-        return ProgresoTema.objects.filter(estudiante=estudiante, tema=obj).first()
+    def get_id(self, obj):
+        return obj["tema"].id
 
-    def get_desbloqueado(self, obj):
-        progreso = self.get_progreso(obj)
-        return bool(progreso and progreso.desbloqueado)
+    def get_titulo(self, obj):
+        return obj["tema"].titulo
 
-    def get_completado(self, obj):
-        progreso = self.get_progreso(obj)
-        return bool(progreso and progreso.completado)
+    def get_orden(self, obj):
+        return obj["tema"].orden
 
-
-class EtapaEstudianteSerializer(serializers.ModelSerializer):
-    temas = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Etapa
-        fields = ["id", "titulo", "orden", "temas"]
-
-    def get_temas(self, obj):
-        temas = obj.temas.all()
-        return TemaEstudianteSerializer(temas, many=True, context=self.context).data
+    def get_icono_estado(self, obj):
+        # STATELESS: mismo input -> mismo resultado siempre, sin tocar BD
+        return determinar_icono_estado(obj["desbloqueado"], obj["completado"])
