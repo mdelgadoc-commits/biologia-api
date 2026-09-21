@@ -22,7 +22,28 @@ class Command(BaseCommand):
         PerfilDocente.objects.get_or_create(usuario=docente)
 
         etapa, _ = Etapa.objects.get_or_create(titulo="Etapa 1: Biología como Ciencia", orden=1)
-        tema, _ = Tema.objects.get_or_create(etapa=etapa, titulo="Concepto", orden=1)
+
+        estaciones = [
+            ("¿Qué es la vida?", 1),
+            ("El objeto de estudio", 2),
+            ("¿De dónde venimos?", 3),
+            ("Las grandes ramas", 4),
+            ("El árbol de la vida", 5),
+        ]
+        temas = []
+        previo = None
+        for titulo, orden in estaciones:
+            tema, _ = Tema.objects.get_or_create(
+                etapa=etapa, titulo=titulo, defaults={"orden": orden}
+            )
+            tema.orden = orden
+            if previo:
+                tema.tema_previo = previo
+            tema.save()
+            temas.append(tema)
+            previo = tema
+
+        tema = temas[0]
 
         preguntas = []
         for i in range(5):
