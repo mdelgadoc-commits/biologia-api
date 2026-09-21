@@ -27,19 +27,31 @@ class PerfilEstudiante(models.Model):
         ES_PE = "es-PE", "Español (Perú)"
         EN = "en", "English"
 
+    class ViaContacto(models.TextChoices):
+        EMAIL = "email", "Correo"
+        TELEFONO = "telefono", "Teléfono"
+
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="perfilestudiante")
     vidas = models.PositiveIntegerField(default=5)
     monedas = models.PositiveIntegerField(default=0)
 
     nombre_perfil = models.CharField(
-        max_length=30, blank=True,
-        validators=[RegexValidator(r'^[a-zA-Z0-9]+$', "Solo letras y números, sin espacios.")]
+        max_length=100, blank=True,
+        validators=[RegexValidator(r"^(?:[^\W\d_]|[ \-\']){2,100}$", "Solo letras y espacios.")]
     )
     edad = models.PositiveSmallIntegerField(null=True, blank=True)
     nivel_autopercibido = models.CharField(
         max_length=10, choices=NivelAutopercibido.choices, blank=True
     )
     idioma = models.CharField(max_length=5, choices=Idioma.choices, default=Idioma.ES_ES)
+
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    horas_minimas = models.FloatField(null=True, blank=True)
+    via_contacto = models.CharField(
+        max_length=10, choices=ViaContacto.choices, default=ViaContacto.EMAIL
+    )
+    correo = models.EmailField(blank=True)
+    telefono = models.CharField(max_length=20, blank=True)
 
     @property
     def onboarding_completo(self) -> bool:

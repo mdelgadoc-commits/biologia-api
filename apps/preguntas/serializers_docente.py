@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Pregunta, ElementoPregunta, PreguntaAbierta
+from .models import Pregunta, ElementoPregunta
 
 
 class ElementoPreguntaDocenteSerializer(serializers.ModelSerializer):
@@ -12,32 +12,45 @@ class ElementoPreguntaDocenteSerializer(serializers.ModelSerializer):
 
 class PreguntaDocenteSerializer(serializers.ModelSerializer):
     elementos = ElementoPreguntaDocenteSerializer(many=True, required=False)
-    respuesta_modelo = serializers.CharField(
-        required=False, allow_blank=True, write_only=True
-    )
 
     class Meta:
         model = Pregunta
-        fields = ["id", "tema", "tipo", "enunciado", "dificultad", "activa",
-                  "elementos", "respuesta_modelo"]
+        fields = ["id", "tema", "tipo", "enunciado", "dificultad", "activa", "elementos"]
 
     def validate(self, data):
         tipo = data.get("tipo", getattr(self.instance, "tipo", None))
         elementos = data.get("elementos", [])
 
         if tipo == "abierta":
-            return data
+            raise serializers.ValidationError(
+                "Las preguntas abiertas ya no se soportan; elimínala y vuelve a crearla."
+            )
 
         if not elementos:
             raise serializers.ValidationError(
                 "Este tipo de pregunta requiere al menos un elemento (alternativa/premisa/hueco)."
             )
 
-        if tipo in ("contextual", "vf_premisas", "cuantas_correctas", "inferencial"):
+        if tipo in ("contextual", "inferencial"):
             correctas = [e for e in elementos if e.get("rol") == "alternativa" and e.get("es_correcto")]
             if len(correctas) != 1:
                 raise serializers.ValidationError(
                     "Debe haber exactamente una alternativa marcada como correcta."
+                )
+
+        if tipo in ("vf_premisas", "cuantas_correctas"):
+            premisas = [e for e in elementos if e.get("rol") == "premisa"]
+            if not premisas:
+                raise serializers.ValidationError(
+                    "Este tipo requiere al menos un elemento con rol 'premisa'."
+                )
+            if any(e.get("es_correcto") is None for e in premisas):
+                raise serializers.ValidationError(
+                    "Cada premisa debe indicar si es verdadera (es_correcto true/false)."
+                )
+            if tipo == "cuantas_correctas" and not any(e.get("es_correcto") for e in premisas):
+                raise serializers.ValidationError(
+                    "Al menos una premisa debe ser verdadera (es_correcto true)."
                 )
 
         if tipo == "completar":
@@ -55,7 +68,6 @@ class PreguntaDocenteSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         elementos_data = validated_data.pop("elementos", [])
-        respuesta_modelo = validated_data.pop("respuesta_modelo", "")
         validated_data["creado_por"] = self.context["request"].user
 
         pregunta = Pregunta.objects.create(**validated_data)
@@ -64,14 +76,10 @@ class PreguntaDocenteSerializer(serializers.ModelSerializer):
             el.pop("id", None)
             ElementoPregunta.objects.create(pregunta=pregunta, **el)
 
-        if pregunta.tipo == "abierta":
-            PreguntaAbierta.objects.create(pregunta=pregunta, respuesta_modelo=respuesta_modelo)
-
         return pregunta
 
     def update(self, instance, validated_data):
         elementos_data = validated_data.pop("elementos", None)
-        respuesta_modelo = validated_data.pop("respuesta_modelo", None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -82,11 +90,6 @@ class PreguntaDocenteSerializer(serializers.ModelSerializer):
             for el in elementos_data:
                 el.pop("id", None)
                 ElementoPregunta.objects.create(pregunta=instance, **el)
-
-        if instance.tipo == "abierta" and respuesta_modelo is not None:
-            PreguntaAbierta.objects.update_or_create(
-                pregunta=instance, defaults={"respuesta_modelo": respuesta_modelo}
-            )
 
         return instance
 
