@@ -14,22 +14,6 @@ from .services import asegurar_progreso_inicial, obtener_mapa_etapa
 from .utils import calcular_progreso_porcentaje
 
 
-class PerfilEstudianteView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        perfil, _ = PerfilEstudiante.objects.get_or_create(usuario=request.user)
-        return Response(PerfilEstudianteSerializer(perfil).data)
-
-    def post(self, request):
-        perfil, _ = PerfilEstudiante.objects.get_or_create(usuario=request.user)
-        serializer = PerfilEstudianteSerializer(perfil, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(PerfilEstudianteSerializer(perfil).data, status=200)
-
-    def patch(self, request):
-        return self.post(request)
 
 
 class EtapaTemasView(APIView):

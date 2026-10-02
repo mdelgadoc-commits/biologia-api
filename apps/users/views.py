@@ -5,7 +5,26 @@ from rest_framework import status
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import RolTokenObtainPairSerializer
 from .serializers_registro import RegistroEstudianteSerializer
+from .models import PerfilEstudiante
+from .serializers_onboarding import PerfilEstudianteSerializer
 
+
+class PerfilEstudianteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        perfil, _ = PerfilEstudiante.objects.get_or_create(usuario=request.user)
+        return Response(PerfilEstudianteSerializer(perfil).data)
+
+    def post(self, request):
+        perfil, _ = PerfilEstudiante.objects.get_or_create(usuario=request.user)
+        serializer = PerfilEstudianteSerializer(perfil, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(PerfilEstudianteSerializer(perfil).data, status=200)
+
+    def patch(self, request):
+        return self.post(request)
 
 class RolTokenObtainPairView(TokenObtainPairView):
     serializer_class = RolTokenObtainPairSerializer
